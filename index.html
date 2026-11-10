@@ -1745,6 +1745,33 @@ window.RETOS_EXP_DATA = {"kit": 2, "retos": [
     <div class="al-detalle" id="al-detalle" aria-live="polite">
       <div class="al-vacio"><span class="al-burbuja" aria-hidden="true">?</span><p><b>Toca un logo</b> para ver qué aporta cada aliado al programa.</p></div>
     </div>
+
+    <div class="card" style="margin-top:28px;">
+      <h3>¿Quieres ser aliada o aliado?</h3>
+      <p class="t">Déjanos tus datos y te contactamos para conversar cómo colaborar.</p>
+      <form class="com-form" id="form-aliado" novalidate>
+        <label class="campo">Nombre de la organización
+          <input id="al-nombre" maxlength="80" required>
+        </label>
+        <label class="campo">Tipo de organización
+          <select id="al-tipo" required>
+            <option value="">Elige una opción</option>
+            <option value="reciclaje">Reciclaje</option>
+            <option value="educacion">Educación</option>
+            <option value="empresa">Empresa</option>
+            <option value="otra">Otra</option>
+          </select>
+        </label>
+        <label class="campo">¿De qué manera te gustaría ayudar?
+          <textarea id="al-ayuda" maxlength="400" required></textarea>
+        </label>
+        <label class="campo">Contacto (correo o teléfono)
+          <input id="al-contacto" maxlength="120" required>
+        </label>
+        <button class="btn" type="submit">Enviar solicitud</button>
+        <p class="id-msg" id="al-msg" aria-live="polite"></p>
+      </form>
+    </div>
   </div>
 </section>
 
@@ -3861,6 +3888,23 @@ window.RETOS_EXP_DATA = {"kit": 2, "retos": [
   var dbPromesa;
   try { dbPromesa = window.claude.use("db"); } catch (e) { dbPromesa = Promise.resolve(null); }
   dbPromesa.then(function (db) { DB = db || null; iniciarBD(); }, function () { DB = null; iniciarBD(); });
+
+  /* Solicitud para ser aliada o aliado */
+  el("form-aliado").addEventListener("submit", function (ev) {
+    ev.preventDefault();
+    var nombre = el("al-nombre").value.trim(), tipo = el("al-tipo").value, ayuda = el("al-ayuda").value.trim(), contacto = el("al-contacto").value.trim();
+    if (!nombre || !tipo || !ayuda || !contacto) { msg("al-msg", "Completa todos los campos."); return; }
+    if (!DB) { msg("al-msg", "No pudimos enviar la solicitud en este momento. Intenta más tarde."); return; }
+    msg("al-msg", "Enviando…");
+    DB.collection("solicitudes_aliados").add({
+      organizacion: nombre, tipo: tipo, como_ayudar: ayuda, contacto: contacto, fecha: new Date().toISOString()
+    }).then(function () {
+      el("form-aliado").reset();
+      msg("al-msg", "¡Gracias! Recibimos tu solicitud y te contactaremos.");
+    }).catch(function () {
+      msg("al-msg", "No pudimos enviar la solicitud. Revisa tu conexión e intenta de nuevo.");
+    });
+  });
 
   /* ---------- Carga de datos ---------- */
   /* Descargas de las guías en PDF: el visor de Claude pide permiso y guarda el archivo */
